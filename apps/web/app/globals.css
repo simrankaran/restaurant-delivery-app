@@ -1,0 +1,12 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-brand: #c2410c;
+  --color-brand-soft: #fff7ed;
+  --color-veg: #15803d;
+  --color-nonveg: #b91c1c;
+}
+
+body {
+  @apply bg-stone-50 text-stone-900 antialiased;
+}
