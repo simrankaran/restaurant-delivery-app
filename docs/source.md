@@ -194,7 +194,7 @@ Indexes: orders {outletId, createdAt}, {customerId, createdAt}, {status, created
 
 ### Order lifecycle
 
-Before the kitchen accepts, the customer or an admin can also cancel a placed order, with an automatic refund; after that, only staff can cancel. In code the accepted state is named preparing. Payment status (pending, paid, refunded) is a separate field, so a refund never hides where the order stopped. Clients only request a move; orders.transition() checks it against this map and the caller's role.
+Before the kitchen accepts, the customer or an admin can also cancel a placed order, with an automatic refund; after that, staff or an admin can cancel from preparing or ready, with a reason and the same refund. In code the accepted state is named preparing. Payment status (pending, paid, refunded) is a separate field, so a refund never hides where the order stopped. Clients only request a move; orders.transition() checks it against this map and the caller's role.
 
 ### Payments, delivery, realtime and security
 
@@ -357,8 +357,8 @@ Checkout and Razorpay. This is money: write the tests first.
 
 Order state machine + realtime. API only: the kitchen UI is built in the Partner app (sessions 9-10). Delete the placeholder (kitchen) and (rider) route groups in apps/web.
 
-- orders.transition(orderId, to, actor, meta): validate against ALLOWED_TRANSITIONS and role rules (staff: accept/reject/ready/collected; rider: out_for_delivery/delivered/not_delivered; admin: cancel), append statusHistory, emit socket events, enqueue notifications. Nothing else writes order.status.
-- Staff endpoints: GET /staff/orders?status=, POST /staff/orders/:id/accept {prepMinutes} (also generates the 4-digit deliveryOtp), /reject {reason}, /ready, /collected. Reject and cancel refund paid orders. PATCH /staff/menu-items/:id/availability, PATCH /staff/outlet/accepting.
+- orders.transition(orderId, to, actor, meta): validate against ALLOWED_TRANSITIONS and role rules from canCancel() and CANCELLABLE_BY in packages/shared (customer: cancel while placed; staff: accept/reject/ready/collected, cancel from preparing or ready; rider: out_for_delivery/delivered/not_delivered; admin: cancel from placed, preparing or ready), append statusHistory, emit socket events, enqueue notifications. Nothing else writes order.status.
+- Staff endpoints: GET /staff/orders?status=, POST /staff/orders/:id/accept {prepMinutes} (also generates the 4-digit deliveryOtp), /reject {reason}, /ready, /collected. Reject and cancel refund paid orders. POST /staff/orders/:id/cancel {reason}. Customer: POST /orders/:id/cancel, only while placed. PATCH /staff/menu-items/:id/availability, PATCH /staff/outlet/accepting.
 - Socket.io with the Redis adapter, token auth at handshake, rooms outlet:<id>, order:<id>, rider:<id>; the server only emits.
 - Every new order also goes to all active staff devices as a high-priority FCM data message (firebase-admin) with type NEW_ORDER and the orderId.
 - BullMQ escalate job: WhatsApp the owner at 2 min and 5 min if still unaccepted; cancelled on accept.

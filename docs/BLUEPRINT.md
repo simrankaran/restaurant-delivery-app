@@ -89,7 +89,7 @@ Indexes: orders `{outletId, createdAt}`, `{customerId, createdAt}`, `{status, cr
 
 ## Order lifecycle
 
-Before the kitchen accepts, the customer or an admin can also cancel a placed order, with an automatic refund; after that, the customer can't cancel, and only the restaurant (staff or admin) can. Rejected and cancelled prepaid orders refund automatically.
+Before the kitchen accepts, the customer or an admin can also cancel a placed order, with an automatic refund; after that, staff or an admin can cancel from preparing or ready, with a reason and the same refund. Rejected and cancelled prepaid orders refund automatically.
 
 ```mermaid
 flowchart TD
@@ -111,21 +111,21 @@ flowchart TD
 
 In code the accepted state is named `preparing` (there is no separate `accepted` status).
 
-| From             | To               | Trigger                                                               |
-| ---------------- | ---------------- | --------------------------------------------------------------------- |
-| (UPI/card)       | pending_payment  | Order created with online payment                                     |
-| pending_payment  | placed           | Webhook confirms payment                                              |
-| pending_payment  | expired          | No payment within 15 min                                              |
-| (COD)            | placed           | Order created with COD                                                |
-| placed           | preparing        | Kitchen accepts, sets prep time                                       |
-| placed           | rejected         | Kitchen declines with a reason; auto-refund if prepaid                |
-| placed           | cancelled        | Customer or admin, before the kitchen accepts; auto-refund if prepaid |
-| preparing        | ready            | Food packed                                                           |
-| preparing, ready | cancelled        | Restaurant or admin (never the customer); auto-refund if prepaid      |
-| ready            | collected        | Pickup orders                                                         |
-| ready            | out_for_delivery | Rider picks up                                                        |
-| out_for_delivery | delivered        | Customer gives 4-digit OTP                                            |
-| out_for_delivery | not_delivered    | Customer unreachable                                                  |
+| From             | To               | Trigger                                                                    |
+| ---------------- | ---------------- | -------------------------------------------------------------------------- |
+| (UPI/card)       | pending_payment  | Order created with online payment                                          |
+| pending_payment  | placed           | Webhook confirms payment                                                   |
+| pending_payment  | expired          | No payment within 15 min                                                   |
+| (COD)            | placed           | Order created with COD                                                     |
+| placed           | preparing        | Kitchen accepts, sets prep time                                            |
+| placed           | rejected         | Kitchen declines with a reason; auto-refund if prepaid                     |
+| placed           | cancelled        | Customer or admin, before the kitchen accepts; auto-refund if prepaid      |
+| preparing        | ready            | Food packed                                                                |
+| preparing, ready | cancelled        | Staff or admin, with a reason (never the customer); auto-refund if prepaid |
+| ready            | collected        | Pickup orders                                                              |
+| ready            | out_for_delivery | Rider picks up                                                             |
+| out_for_delivery | delivered        | Customer gives 4-digit OTP                                                 |
+| out_for_delivery | not_delivered    | Customer unreachable                                                       |
 
 Cancel permissions live in `CANCELLABLE_BY` / `canCancel()` and auto-refund targets in `AUTO_REFUND_STATUSES` (`packages/shared/src/order-status.ts`).
 

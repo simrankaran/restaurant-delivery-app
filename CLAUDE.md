@@ -35,7 +35,7 @@ First-time setup: `pnpm install`, copy `apps/api/.env.example` → `apps/api/.en
 
 1. **Money is integer paise everywhere** (`Paise`, `toPaise`, `formatINR` in shared). No rupee floats in storage, APIs or maths.
 2. **The server recomputes every price via `packages/shared/pricing.ts`.** It re-reads items, variants and add-ons from the DB. A total, price or discount sent by the client is never trusted.
-3. **`order.status` changes only through `orders.transition()`**, which checks `ALLOWED_TRANSITIONS` and the caller's role, appends `statusHistory`, emits sockets and enqueues notifications. No other code writes `status`. Cancels go through `canCancel()` (`placed`: customer or admin; `preparing`/`ready`: staff or admin; never the customer once the kitchen accepts). Moving into `AUTO_REFUND_STATUSES` refunds a paid order.
+3. **`order.status` changes only through `orders.transition()`**, which checks `ALLOWED_TRANSITIONS` and the caller's role, appends `statusHistory`, emits sockets and enqueues notifications. No other code writes `status`. Cancels go through `canCancel()` (`placed`: customer or admin; `preparing`/`ready`: staff or admin, with a reason; never the customer once the kitchen accepts). Moving into `AUTO_REFUND_STATUSES` refunds a paid order.
 4. **Payment status is separate from order status.** The Razorpay webhook (signature-checked on the raw body) is the source of truth for "paid".
 5. **`outletId` on every document** (outlets, categories, menuItems, orders, coupons…).
 6. **zod validates every request body**, and every route has `requireAuth`/`requireRole` unless it is deliberately public.
